@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Advent do
   import Advent.Input
 
   def run([day]) do
-    run_day_part(day, "1")
+    run([day, "1"])
   end
 
   def run([day, part]) do
@@ -15,8 +15,23 @@ defmodule Mix.Tasks.Advent do
     end
   end
 
+  def run([day, "--test", data]) do
+    run([day, "1", "--test", data])
+  end
+
+  def run([day, part, "--test", data]) do
+    run_day_part(day, part, data)
+  end
+
   def run([]) do
     IO.puts("Missing required argument <day>")
+  end
+
+  defp run_day_part(day, part, data) do
+    IO.puts("\nExecuting day #{day}, part #{part}\n")
+    part_int = Integer.parse(part) |> elem(0)
+    output = apply(:"Elixir.Advent.Solvers.Day#{day}", :solve, [part_int, data])
+    IO.puts("Output for day #{day}\n#{output}")
   end
 
   defp run_day_part(day, part) do
