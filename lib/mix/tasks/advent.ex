@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Advent do
   end
 
   def run([day, "--test", data]) do
-    run([day, "1", "--test", data])
+    run([day, "1", "--test", String.replace(data, "\\n", "\n")])
   end
 
   def run([day, part, "--test", data]) do
