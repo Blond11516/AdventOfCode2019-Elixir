@@ -34,28 +34,17 @@ defmodule Advent.Solvers.Day3 do
     {set, current_point}
   end
 
-  defp add_points_from_move({:up, distance}, set, {x, y}) do
-    new_point = {x, y + 1}
-    set = MapSet.put(set, new_point)
-    add_points_from_move({:up, distance - 1}, set, new_point)
-  end
+  defp add_points_from_move({direction, distance}, set, {x, y}) do
+    new_point =
+      case direction do
+        :up -> {x, y + 1}
+        :down -> {x, y - 1}
+        :left -> {x - 1, y}
+        :right -> {x + 1, y}
+      end
 
-  defp add_points_from_move({:down, distance}, set, {x, y}) do
-    new_point = {x, y - 1}
     set = MapSet.put(set, new_point)
-    add_points_from_move({:down, distance - 1}, set, new_point)
-  end
-
-  defp add_points_from_move({:left, distance}, set, {x, y}) do
-    new_point = {x - 1, y}
-    set = MapSet.put(set, new_point)
-    add_points_from_move({:left, distance - 1}, set, new_point)
-  end
-
-  defp add_points_from_move({:right, distance}, set, {x, y}) do
-    new_point = {x + 1, y}
-    set = MapSet.put(set, new_point)
-    add_points_from_move({:right, distance - 1}, set, new_point)
+    add_points_from_move({direction, distance - 1}, set, new_point)
   end
 
   defp parse_move_list(moves) do
