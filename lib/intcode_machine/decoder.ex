@@ -1,19 +1,5 @@
 defmodule Advent.IntcodeMachine.Decoder do
-  @param_modes_map %{?0 => :position, ?1 => :immediate}
-  @nb_args_map %{
-    "01" => 3,
-    "02" => 3,
-    "03" => 1,
-    "04" => 1,
-    "99" => 0
-  }
-  @param_dirs_map %{
-    "01" => [:in, :in, :out],
-    "02" => [:in, :in, :out],
-    "03" => [:out],
-    "04" => [:in],
-    "99" => []
-  }
+  alias Advent.IntcodeMachine.Tables
 
   def decode(opcode, memory, ip) do
     decode(opcode, memory, ip, [])
@@ -34,14 +20,14 @@ defmodule Advent.IntcodeMachine.Decoder do
   end
 
   defp decode([param_mode | opcode], memory, ip, param_modes) do
-    {:ok, param_mode_name} = Map.fetch(@param_modes_map, param_mode)
+    param_mode_name = Tables.get_param_mode(param_mode)
     param_modes = [param_mode_name | param_modes]
 
     decode(opcode, memory, ip, param_modes)
   end
 
   defp pad_param_modes(param_modes, opcode) do
-    {:ok, expected_args_nb} = Map.fetch(@nb_args_map, opcode)
+    expected_args_nb = Tables.get_nb_args(opcode)
     param_modes ++ List.duplicate(:position, expected_args_nb - length(param_modes))
   end
 
@@ -50,13 +36,8 @@ defmodule Advent.IntcodeMachine.Decoder do
     |> String.to_integer()
   end
 
-  defp get_param_dirs(opcode) do
-    {:ok, dirs} = Map.fetch(@param_dirs_map, opcode)
-    dirs
-  end
-
   defp get_param_values(param_modes, opcode, memory, ip) do
-    param_dirs = get_param_dirs(opcode)
+    param_dirs = Tables.get_params_dirs(opcode)
     get_param_values(param_modes, param_dirs, memory, ip, 0)
   end
 
