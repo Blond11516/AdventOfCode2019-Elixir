@@ -1,5 +1,5 @@
 defmodule Advent.IntcodeMachine.Decoder do
-  @param_modes_map %{?0 => :position, ?1 => :value}
+  @param_modes_map %{?0 => :position, ?1 => :immediate}
   @nb_args_map %{
     "01" => 3,
     "02" => 3,
@@ -15,23 +15,25 @@ defmodule Advent.IntcodeMachine.Decoder do
     "99" => []
   }
 
-  def decode([opcode], memory, ip, _a) do
-    opcode = "0#{<<opcode::utf8>>}"
-    param_modes = pad_param_modes([], opcode)
-    param_values = get_param_values(param_modes, get_param_dirs(opcode), memory, ip, 0)
+  def decode(opcode, memory, ip) do
+    decode(opcode, memory, ip, [])
+  end
+
+  defp decode([opcode], memory, ip, _) do
+    decode([?0, opcode], memory, ip, [])
+  end
+
+  defp decode([opcode_hd, opcode_tail], memory, ip, param_modes) do
+    opcode = "#{<<opcode_hd::utf8>>}#{<<opcode_tail::utf8>>}"
+
+    param_values =
+      pad_param_modes(param_modes, opcode)
+      |> get_param_values(opcode, memory, ip)
+
     {param_values, opcode}
   end
 
-  def decode([hd | opcode], memory, ip, param_modes) when length(opcode) == 1 do
-    opcode = "#{<<hd::utf8>>}#{opcode}"
-
-    param_modes = pad_param_modes(param_modes, opcode)
-
-    param_values = get_param_values(param_modes, get_param_dirs(opcode), memory, ip, 0)
-    {param_values, opcode}
-  end
-
-  def decode([param_mode | opcode], memory, ip, param_modes) do
+  defp decode([param_mode | opcode], memory, ip, param_modes) do
     {:ok, param_mode_name} = Map.fetch(@param_modes_map, param_mode)
     param_modes = [param_mode_name | param_modes]
 
@@ -53,6 +55,11 @@ defmodule Advent.IntcodeMachine.Decoder do
     dirs
   end
 
+  defp get_param_values(param_modes, opcode, memory, ip) do
+    param_dirs = get_param_dirs(opcode)
+    get_param_values(param_modes, param_dirs, memory, ip, 0)
+  end
+
   defp get_param_values([], [], _memory, _ip, _param_index) do
     []
   end
@@ -64,13 +71,8 @@ defmodule Advent.IntcodeMachine.Decoder do
     [value | get_param_values(param_modes, param_dirs, memory, ip, param_index + 1)]
   end
 
-  defp get_param_values([:position | param_modes], [:out | param_dirs], memory, ip, param_index) do
+  defp get_param_values([_ | param_modes], [_ | param_dirs], memory, ip, param_index) do
     position = get_value_from_memory(memory, ip + 1 + param_index)
     [position | get_param_values(param_modes, param_dirs, memory, ip, param_index + 1)]
-  end
-
-  defp get_param_values([:value | param_modes], [_ | param_dirs], memory, ip, param_index) do
-    value = get_value_from_memory(memory, ip + 1 + param_index)
-    [value | get_param_values(param_modes, param_dirs, memory, ip, param_index + 1)]
   end
 end

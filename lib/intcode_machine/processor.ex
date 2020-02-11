@@ -13,7 +13,7 @@ defmodule Advent.IntcodeMachine.Processor do
     {param_values, opcode} =
       Enum.at(memory, ip)
       |> String.to_charlist()
-      |> Decoder.decode(memory, ip, [])
+      |> Decoder.decode(memory, ip)
 
     result = Executor.execute(opcode, memory, ip, param_values)
 
