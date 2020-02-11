@@ -5,7 +5,7 @@ defmodule Advent.MixProject do
     [
       app: :advent_of_code_2019,
       version: "0.1.0",
-      elixir: "~> 1.10",
+      elixir: "~> 1.9.4",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       dialyzer: [plt_add_apps: [:mix]]
