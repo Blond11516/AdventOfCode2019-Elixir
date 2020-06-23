@@ -1,6 +1,26 @@
 defmodule Advent.IntcodeMachine.Executor do
+  @moduledoc """
+  Executes the various instructions supported by the IntCode machine.
+  """
   alias Advent.IntcodeMachine.Tables
 
+  @type memory :: [String.t()]
+
+  @doc """
+  Executes a single instruction and returns the result.
+
+  ## Returns
+
+  The possible return patterns are the following :
+  * `{:error, String.t()}`: The intocde machine encounterd an invalid state (typically an invalid opcode).
+  Returns an error message explaining what went wrong.
+  * `{:terminate, memory()}`: The IntCode machine successfully executed it's program until termination. Returns the
+  machine's memory upon termination.
+  * `{:run, memory(), integer()}`: The IntCode machine successfully executed an instruction and is ready to move on to
+  the next one. Returns the current memory and the instruction pointer for the next instruction.
+  """
+  @spec execute(String.t(), memory(), integer(), [integer()]) ::
+          {:error, String.t()} | {:terminate, memory()} | {:run, memory(), integer()}
   def execute("99", memory, _ip, _param_values) do
     {:terminate, memory}
   end

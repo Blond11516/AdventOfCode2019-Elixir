@@ -1,6 +1,18 @@
 defmodule Advent.IntcodeMachine.Decoder do
+  @moduledoc """
+  Decodes instructions from an IntCode machine's state.
+  """
+
   alias Advent.IntcodeMachine.Tables
 
+  @doc """
+  Decodes the next instruction from the IntCode machine's state.
+
+  Returns a tuple with the following values :
+  * The list of the instruction's parameters' values
+  * The instruction's opcode
+  """
+  @spec decode(charlist(), [String.t()], integer()) :: {[integer], binary}
   def decode(opcode, memory, ip) do
     decode(opcode, memory, ip, [])
   end
@@ -37,7 +49,7 @@ defmodule Advent.IntcodeMachine.Decoder do
   end
 
   defp get_param_values(param_modes, opcode, memory, ip) do
-    param_dirs = Tables.get_params_dirs(opcode)
+    param_dirs = Tables.get_params_directions(opcode)
     get_param_values(param_modes, param_dirs, memory, ip, 0)
   end
 
