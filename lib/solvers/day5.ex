@@ -4,7 +4,7 @@ defmodule Advent.Solvers.Day5 do
   alias Advent.IntcodeMachine.Processor
 
   @impl true
-  def solve(1, input) do
+  def solve(_, input) do
     Processor.start(input)
     ""
   end
