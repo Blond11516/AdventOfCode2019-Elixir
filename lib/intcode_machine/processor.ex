@@ -5,6 +5,7 @@ defmodule Advent.IntcodeMachine.Processor do
   The processor receives the source file and handles the different steps of executing the corresponding program.
   """
 
+  alias Advent.IntcodeMachine
   alias Advent.IntcodeMachine.{Decoder, Executor}
 
   @doc """
@@ -20,29 +21,27 @@ defmodule Advent.IntcodeMachine.Processor do
   ## Returns
 
   Returns one of the following :
-  * `String.t()`: The IntCode machine's memory at the end of the execution. This return pattern also indicates that
+  * `IntcodeMachine.t()`: The IntCode machine's state at the end of the execution. This return pattern also indicates that
   the program terminated correctly.
   * `{:error, String.t()}`: An error message indicating that something went wrong while executing the program.
   """
-  @spec start(String.t(), ([String.t()] -> [String.t()])) :: [String.t()] | {:error, String.t()}
+  @spec start(String.t(), ([String.t()] -> [String.t()])) :: IntcodeMachine.t() | {:error, String.t()}
   def start(input, initializer \\ fn x -> x end) do
     input
     |> String.split(",")
     |> initializer.()
-    |> run(0)
+    |> IntcodeMachine.new(0)
+    |> run()
   end
 
-  defp run(memory, ip) do
-    {param_values, opcode} =
-      Enum.at(memory, ip)
-      |> String.to_charlist()
-      |> Decoder.decode(memory, ip)
+  defp run(machine) do
+    {param_values, opcode} = Decoder.decode(machine)
 
-    result = Executor.execute(opcode, memory, ip, param_values)
+    result = Executor.execute(opcode, machine, param_values)
 
     case result do
-      {:terminate, memory} -> memory
-      {:run, memory, ip} -> run(memory, ip)
+      {:terminate, machine} -> machine
+      {:run, machine} -> run(machine)
       {:error, error} -> {:error, error}
     end
   end

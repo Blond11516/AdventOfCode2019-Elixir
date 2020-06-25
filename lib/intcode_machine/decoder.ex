@@ -3,6 +3,7 @@ defmodule Advent.IntcodeMachine.Decoder do
   Decodes instructions from an IntCode machine's state.
   """
 
+  alias Advent.IntcodeMachine
   alias Advent.IntcodeMachine.Tables
 
   @doc """
@@ -12,30 +13,33 @@ defmodule Advent.IntcodeMachine.Decoder do
   * The list of the instruction's parameters' values
   * The instruction's opcode
   """
-  @spec decode(charlist(), [String.t()], integer()) :: {[integer], binary}
-  def decode(opcode, memory, ip) do
-    decode(opcode, memory, ip, [])
+  @spec decode(IntcodeMachine.t()) :: {[integer], IntcodeMachine.opcode()}
+  def decode(machine) do
+    IntcodeMachine.get_current_symbol(machine)
+    |> decode(machine, [])
   end
 
-  defp decode([opcode], memory, ip, _) do
-    decode([?0, opcode], memory, ip, [])
+  # Opcode is single digit, need to pad with '0'
+  defp decode([opcode], machine, _) do
+    decode([?0, opcode], machine, [])
   end
 
-  defp decode([opcode_hd, opcode_tail], memory, ip, param_modes) do
-    opcode = "#{<<opcode_hd::utf8>>}#{<<opcode_tail::utf8>>}"
-
+  # Only opcode remains
+  defp decode(opcode, machine, param_modes) when length(opcode) == 2 do
     param_values =
-      pad_param_modes(param_modes, opcode)
-      |> get_param_values(opcode, memory, ip)
+      param_modes
+      |> pad_param_modes(opcode)
+      |> get_param_values(opcode, machine)
 
     {param_values, opcode}
   end
 
-  defp decode([param_mode | opcode], memory, ip, param_modes) do
+  # Parameter modes left to decode
+  defp decode([param_mode | opcode], machine, param_modes) do
     param_mode_name = Tables.get_param_mode(param_mode)
     param_modes = [param_mode_name | param_modes]
 
-    decode(opcode, memory, ip, param_modes)
+    decode(opcode, machine, param_modes)
   end
 
   defp pad_param_modes(param_modes, opcode) do
@@ -43,29 +47,24 @@ defmodule Advent.IntcodeMachine.Decoder do
     param_modes ++ List.duplicate(:position, expected_args_nb - length(param_modes))
   end
 
-  defp get_value_from_memory(memory, position) do
-    Enum.at(memory, position)
-    |> String.to_integer()
-  end
-
-  defp get_param_values(param_modes, opcode, memory, ip) do
+  defp get_param_values(param_modes, opcode, machine) do
     param_dirs = Tables.get_params_directions(opcode)
-    get_param_values(param_modes, param_dirs, memory, ip, 0)
+    get_param_values(param_modes, param_dirs, machine, 0)
   end
 
-  defp get_param_values([], [], _memory, _ip, _param_index) do
+  defp get_param_values([], [], _machine, _param_index) do
     []
   end
 
-  defp get_param_values([:position | param_modes], [:in | param_dirs], memory, ip, param_index) do
-    position = get_value_from_memory(memory, ip + 1 + param_index)
+  defp get_param_values([:position | param_modes], [:in | param_dirs], %{ip: ip} = machine, param_index) do
+    position = IntcodeMachine.get_value_from_memory(machine, ip + 1 + param_index)
 
-    value = get_value_from_memory(memory, position)
-    [value | get_param_values(param_modes, param_dirs, memory, ip, param_index + 1)]
+    value = IntcodeMachine.get_value_from_memory(machine, position)
+    [value | get_param_values(param_modes, param_dirs, machine, param_index + 1)]
   end
 
-  defp get_param_values([_ | param_modes], [_ | param_dirs], memory, ip, param_index) do
-    position = get_value_from_memory(memory, ip + 1 + param_index)
-    [position | get_param_values(param_modes, param_dirs, memory, ip, param_index + 1)]
+  defp get_param_values([_ | param_modes], [_ | param_dirs], %{ip: ip} = machine, param_index) do
+    position = IntcodeMachine.get_value_from_memory(machine, ip + 1 + param_index)
+    [position | get_param_values(param_modes, param_dirs, machine, param_index + 1)]
   end
 end
