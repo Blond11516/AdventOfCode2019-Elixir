@@ -1,4 +1,14 @@
 defmodule Mix.Tasks.Advent do
+  @moduledoc """
+  Mix task for running the solution for a given AdventOfCode challenge.
+
+  The task can be called as follows:
+  `mix advent day [part] [--test data]`
+  * day: The day for which to run the solution
+  * part: The part of the day for which to run the solution. Defaults to 1.
+  * --test data: Used for passing test data to the solver. If not present, the corresponding input file is used instead.
+  """
+
   use Mix.Task
 
   import Advent.Input
